@@ -1,14 +1,37 @@
-import streamlit as st
-import pandas as pd
 
+  import streamlit as st
+import pandas as pd
+import time
+
+# Page setup
 st.set_page_config(page_title="🦷 Periodontal Stage Predictor", layout="wide")
 st.title("🦷 Periodontal Disease Stage Prediction")
-st.markdown("Enter patient data below to predict the periodontal disease stage. *(This version simulates prediction for testing.)*")
+st.markdown("Enter patient data below to predict the periodontal disease stage.")
 
-# Define feature names
-feature_names = ['HbA1c', 'BMI', 'TG', 'Chol', 'AGE', 'HDL', 'LDL',
-                 'Urea', 'Creatinine', 'Cr', 'Gender', 'CLASS']
+# --- Session State to Track Doctor Button ---
+if "show_doctor" not in st.session_state:
+    st.session_state.show_doctor = False
 
+# --- Sidebar Actions ---
+st.sidebar.header("🧾 Next Steps")
+
+# Show download button only after prediction
+if "predicted_stage" in st.session_state:
+    report_text = st.session_state.report_text
+    st.sidebar.download_button("📄 Download Report", report_text, file_name="perio_prediction_report.txt")
+
+    if st.sidebar.button("👨‍⚕️ Check with Doctor"):
+        st.session_state.show_doctor = True
+
+    if st.session_state.show_doctor:
+        st.sidebar.markdown("### 📍 Nearest Dental Specialist")
+        st.sidebar.markdown("- **SmileCare Dental Clinic**, MG Road")
+        st.sidebar.markdown("- 📞 **+91-98765-43210**")
+        st.sidebar.markdown("- 📧 **smilecare@example.com**")
+        st.sidebar.success("💬 You can share the downloaded report during your visit.")
+        st.sidebar.info("🧠 Tip: Ask about scaling, root planing, or antibiotics for advanced stages.")
+
+# --- Patient Data Form ---
 st.header("📝 Patient Data Input")
 with st.form("patient_form"):
     hba1c = st.number_input("HbA1c (%)", 0.0, 15.0, 5.0, step=0.1)
@@ -23,11 +46,14 @@ with st.form("patient_form"):
     cr = st.number_input("Creatinine Ratio (Cr)", 0.1, 5.0, 1.2)
     gender = st.selectbox("Gender", ['M', 'F'])
     class_val = st.selectbox("CLASS (Diabetes Status)", ['N', 'Y', 'P'])
-
     submitted = st.form_submit_button("🔍 Predict Stage")
 
+# --- Prediction Logic ---
 if submitted:
-    # Simulated prediction logic (based on HbA1c)
+    with st.spinner('Analyzing data and predicting...'):
+        time.sleep(2)
+
+    # Dummy logic for now
     if hba1c >= 8:
         predicted_stage = "Stage IV"
     elif hba1c >= 7:
@@ -39,7 +65,32 @@ if submitted:
     else:
         predicted_stage = "Healthy"
 
-    # Show result
+    
     st.subheader("📊 Prediction Result")
-    st.markdown(f"### 🧠 Predicted Periodontal Stage: `{predicted_stage}`")
-    st.markdown("This is a simulated prediction based on HbA1c. Once your model files are ready, this will be replaced with real SVM predictions.")
+    st.success(f"🧠 Predicted Periodontal Stage: `{predicted_stage}`")
+
+    report_text = f"""
+🦷 Periodontal Disease Prediction Report
+
+Predicted Stage: {predicted_stage}
+------------------------------
+Patient Data:
+- HbA1c: {hba1c}%
+- BMI: {bmi}
+- TG: {tg}
+- Chol: {chol}
+- Age: {age}
+- HDL: {hdl}
+- LDL: {ldl}
+- Urea: {urea}
+- Creatinine: {creatinine}
+- Cr: {cr}
+- Gender: {gender}
+- CLASS: {class_val}
+
+⚠️ Please consult a dental professional for confirmation.
+    """
+
+    # Save state for sidebar access
+    st.session_state.predicted_stage = predicted_stage
+    st.session_state.report_text = report_text
